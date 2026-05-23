@@ -37,8 +37,3 @@ I designed a custom PCB in KiCad featuring a 2x3 matrix with 6 mechanical Cherry
 | **1U Blank Keycaps (10-pack)** | 1 | Standard covers for the mechanical switches. | ~$3.35 | [AliExpress](https://a.aliexpress.com/_Eyx6JJo) |
 
 ---
-
-## Firmware Note
-The firmware is written in C++ using the Arduino IDE. It utilizes the `Keyboard.h` library to send macros and shortcuts, and the `Adafruit_SSD1306` library to drive the OLED display. The buttons are connected to digital pins using the `INPUT_PULLUP` method.
-
-*(A quick note to the reviewers: I added the OLED display to make the project uniquely mine. If adding the display pushes this out of the Starter Project grant limits, please feel free to strike the display from the BOM. I am completely fine with buying the screen with my own cash, I just wanted to build a tool I will actually use.)*
