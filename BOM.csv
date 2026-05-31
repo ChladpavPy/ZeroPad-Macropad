@@ -1,0 +1,6 @@
+"Reference","Qty","Value","DNP","Exclude from BOM","Exclude from Board","Footprint","Datasheet"
+"D1,D2,D3","3","L08R5000Q1","","","","LED_THT:LEDRD254W57D500H1070",""
+"J1","1","0.96 OLED DISPLAY","","","","Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical","~"
+"R1,R2,R3","3","330R","","","","Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P5.08mm_Horizontal","~"
+"SW1,SW2,SW3,SW4,SW5,SW6","6","SW_Push","","","","Button_Switch_Keyboard:SW_Cherry_MX_1.00u_PCB","~"
+"U1","1","XIAO-RP2040-DIP","","","","XIAO_SEED_RP2040:XIAO-RP2040-DIP (1)",""
