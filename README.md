@@ -14,6 +14,11 @@ I designed a custom PCB in KiCad featuring a 2x3 matrix with 6 mechanical Cherry
 
 ## Gallery
 
+### 3D Assembly Renders
+![PCB 3D 1](Images/ZeroPad.png)
+![PCB 3D 2](Images/ZeroPad1.png)
+![PCB 3D 3](Images/ZeroPad3.png)
+
 ### 3D PCB Renders
 ![PCB 3D 1](Images/ZeroPad.png)
 ![PCB 3D 2](Images/ZeroPad2.png)
