@@ -1,7 +1,0 @@
-﻿Designator,Footprint,Quantity,Value,LCSC Part #
-"D1, D2, D3",LEDRD254W57D500H1070,3,L08R5000Q1,
-J1,PinHeader_1x04_P2.54mm_Vertical,1,0.96 OLED DISPLAY,
-"R1, R2, R3",R_Axial_DIN0204_L3.6mm_D1.6mm_P5.08mm_Horizontal,3,330R,
-"R4, R5",R_Axial_DIN0204_L3.6mm_D1.6mm_P5.08mm_Horizontal,2,4.7K,
-"SW1, SW2, SW3, SW4, SW5, SW6",SW_Cherry_MX_1.00u_PCB,6,SW_Push,
-U1,XIAO-RP2040-DIP (1),1,XIAO-RP2040-DIP,
