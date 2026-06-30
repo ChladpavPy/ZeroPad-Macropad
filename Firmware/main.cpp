@@ -1,121 +1,181 @@
+#include <Arduino.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <Keyboard.h>
 
-// So basically this code works like rubber ducky, it is a keyboard that can type much faster than a human
+#define MY_SDA 6
+#define MY_SCL 7
 
-Adafruit_SSD1306 disp(128, 32, &Wire, -1);
+#define B1 26
+#define B2 27
+#define B3 28
+#define B4 0
+#define B5 1
+#define B6 29
 
-// pins mapped from the kicad schematic
-int b1 = 26;
-int b2 = 27;
-int b3 = 28;
-int b4 = 0;
-int b5 = 1;
-int b6 = 29;
+#define LED1 2
+#define LED2 4
+#define LED3 3
 
-int led1 = 2; 
-int led2 = 4;
-int led3 = 3;
+Adafruit_SSD1306 display(128, 64, &Wire, -1);
+bool displayOK = false;
 
-bool gamingMode = false; // i  will use this later maybe for layers
+int currentMode = 0;
+int menuIndex = 0;
+const char* menuLabels[] = {"> Shortcuts", "> Morse code", "> Generator"};
+
+String morseBuffer = "";
+String textBuffer = "";
+const char* morseTable[] = {
+  ".-","-...","-.-.","-..",".","..-.","--.","....","..",
+  ".---","-.-",".-..","--","-.","---",".--.","--.-",".-.",
+  "...","-","..-","...-",".--","-..-","-.--","--.."
+};
+
+int passLen = 13;
+String currentPass = "QJA2mep%TrWwJ";
+char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
 
 void setup() {
-  pinMode(b1, INPUT_PULLUP);
-  pinMode(b2, INPUT_PULLUP);
-  pinMode(b3, INPUT_PULLUP);
-  pinMode(b4, INPUT_PULLUP);
-  pinMode(b5, INPUT_PULLUP);
-  pinMode(b6, INPUT_PULLUP);
+  pinMode(LED1, OUTPUT);
+  pinMode(LED2, OUTPUT);
+  pinMode(LED3, OUTPUT);
+  
+  pinMode(B1, INPUT_PULLUP);
+  pinMode(B2, INPUT_PULLUP);
+  pinMode(B3, INPUT_PULLUP);
+  pinMode(B4, INPUT_PULLUP);
+  pinMode(B5, INPUT_PULLUP);
+  pinMode(B6, INPUT_PULLUP);
 
-  pinMode(led1, OUTPUT);
-  pinMode(led2, OUTPUT);
-  pinMode(led3, OUTPUT);
+  pinMode(MY_SDA, INPUT_PULLUP);
+  pinMode(MY_SCL, INPUT_PULLUP);
+  delay(10);
+  
+  Wire.setSDA(MY_SDA);
+  Wire.setSCL(MY_SCL);
+  Wire.setClock(100000);
+  Wire.begin();
 
+  if (display.begin(SSD1306_SWITCHCAPVCC, 0x3C) || display.begin(SSD1306_SWITCHCAPVCC, 0x3D)) {
+    displayOK = true;
+  }
+  
   Keyboard.begin();
-
-  
-  // init display
-  disp.begin(SSD1306_SWITCHCAPVCC, 0x3C);
-  disp.clearDisplay();
-  disp.setTextColor(1);
-  disp.setCursor(0,0);
-  disp.print("zeropad booting...");
-  disp.display();
-  delay(1000); // give it a sec to breathe
-  
-  disp.clearDisplay();
-  disp.setCursor(0,0);
-  disp.print("Work Mode");
-  disp.display();
-}
-
-// custom function to open apps acting like a super fast human
-void openApp(String appName) {
-  Keyboard.press(KEY_LEFT_GUI); // press windows key
-  delay(50);
-  Keyboard.releaseAll();
-  delay(300); // wait for start menu to pop up, otherwise it eats the first letters
-  Keyboard.print(appName);
-  delay(300); // wait for windows search to find it
-  Keyboard.press(KEY_RETURN); // smash enter
-  delay(50);
-  Keyboard.releaseAll();
+  randomSeed(analogRead(26));
+  delay(1000);
+  drawMenu();
 }
 
 void loop() {
-  
-  if (digitalRead(b1) == LOW) {
-    digitalWrite(led1, HIGH);
-    openApp("kicad"); // magically opens kicad
-    delay(500); // desperately preventing double clicks
-    digitalWrite(led1, LOW);
-  }
-
-  if (digitalRead(b2) == LOW) {
-    digitalWrite(led2, HIGH);
-    openApp("fusion 360");
-    delay(500);
-    digitalWrite(led2, LOW);
-  }
-
-  if (digitalRead(b3) == LOW) {
-    digitalWrite(led3, HIGH);
-    openApp("code"); // opens vs code
-    delay(500);
-    digitalWrite(led3, LOW);
-  }
-
-  if (digitalRead(b4) == LOW) {
-    // just a classic ctrl c
-    Keyboard.press(KEY_LEFT_CTRL);
-    Keyboard.press('c');
-    delay(100);
-    Keyboard.releaseAll();
-    delay(300);
-  }
-
-  if (digitalRead(b5) == LOW) {
-    Keyboard.press(KEY_LEFT_CTRL);
-    Keyboard.press('v');
-    delay(100);
-    Keyboard.releaseAll();
-    delay(300);
-  }
-
-  if (digitalRead(b6) == LOW) {
-    gamingMode = !gamingMode; // flip the boolean state
-    disp.clearDisplay();
-    disp.setCursor(0,0);
-    
-    if(gamingMode) {
-       disp.print("Gaming Mode");
-       // you could change the app shortcuts here based on this mode later
-    } else {
-       disp.print("Work Mode");
+  if (currentMode == 0) {
+    if (digitalRead(B1) == LOW) { menuIndex--; if(menuIndex < 0) menuIndex = 2; drawMenu(); delay(200); }
+    if (digitalRead(B2) == LOW) { menuIndex++; if(menuIndex > 2) menuIndex = 0; drawMenu(); delay(200); }
+    if (digitalRead(B3) == LOW) { currentMode = menuIndex + 1; drawMode(); delay(200); }
+  } 
+  else if (currentMode == 1) {
+    if (digitalRead(B6) == LOW) { currentMode = 0; drawMenu(); delay(200); }
+    if (digitalRead(B1) == LOW) { Keyboard.press(KEY_SCAN_PREVIOUS); Keyboard.releaseAll(); delay(200); }
+    if (digitalRead(B2) == LOW) { Keyboard.press(KEY_PLAY_PAUSE); Keyboard.releaseAll(); delay(200); }
+    if (digitalRead(B5) == LOW) { Keyboard.press(KEY_LEFT_GUI); Keyboard.press(KEY_LEFT_SHIFT); Keyboard.press('s'); Keyboard.releaseAll(); delay(200); }
+  } 
+  else if (currentMode == 2) {
+    if (digitalRead(B6) == LOW) { currentMode = 0; drawMenu(); delay(200); }
+    if (digitalRead(B1) == LOW) { morseBuffer += "."; drawMorse(); delay(200); }
+    if (digitalRead(B2) == LOW) { morseBuffer += "-"; drawMorse(); delay(200); }
+    if (digitalRead(B3) == LOW) {
+      for (int i = 0; i < 26; i++) {
+        if (morseBuffer == morseTable[i]) {
+          textBuffer += (char)('A' + i);
+          Keyboard.print((char)('a' + i));
+          break;
+        }
+      }
+      morseBuffer = "";
+      drawMorse();
+      delay(200);
     }
-    disp.display();
-    delay(500); // bounce protection
+    if (digitalRead(B4) == LOW) { morseBuffer = ""; drawMorse(); delay(200); }
+    if (digitalRead(B5) == LOW) { textBuffer += " "; Keyboard.print(" "); drawMorse(); delay(200); }
+  } 
+  else if (currentMode == 3) {
+    if (digitalRead(B6) == LOW) { currentMode = 0; drawMenu(); delay(200); }
+    if (digitalRead(B1) == LOW) { passLen++; if(passLen > 25) passLen = 25; drawGenerator(); delay(200); }
+    if (digitalRead(B2) == LOW) { passLen--; if(passLen < 4) passLen = 4; drawGenerator(); delay(200); }
+    if (digitalRead(B3) == LOW) { 
+      currentPass = "";
+      for(int i=0; i<passLen; i++) {
+        currentPass += charset[random(0, strlen(charset))];
+      }
+      drawGenerator(); 
+      delay(200); 
+    }
+    if (digitalRead(B4) == LOW) { Keyboard.print(currentPass); delay(200); }
   }
+}
+
+void drawMenu() {
+  if(!displayOK) return;
+  display.clearDisplay();
+  display.setTextColor(SSD1306_WHITE);
+  display.setTextSize(1);
+  display.setCursor(0,0);
+  display.println("ZEROPAD OS");
+  display.println("----------------");
+  for(int i = 0; i < 3; i++) {
+    if(i == menuIndex) {
+      display.print("-> ");
+    } else {
+      display.print("   ");
+    }
+    display.println(menuLabels[i]);
+  }
+  display.display();
+}
+
+void drawMode() {
+  if(currentMode == 1) drawShortcuts();
+  if(currentMode == 2) drawMorse();
+  if(currentMode == 3) drawGenerator();
+}
+
+void drawShortcuts() {
+  if(!displayOK) return;
+  display.clearDisplay();
+  display.setCursor(0,0);
+  display.println("SHORTCUTS");
+  display.println("----------------");
+  display.println("B1: Prev Track");
+  display.println("B2: Play/Pause");
+  display.println("B5: Win+Shift+S");
+  display.println("B6: Zpet do Menu");
+  display.display();
+}
+
+void drawMorse() {
+  if(!displayOK) return;
+  display.clearDisplay();
+  display.setCursor(0,0);
+  display.println("MORSE CODE");
+  display.println("----------------");
+  display.print("Znak: "); 
+  display.println(morseBuffer);
+  display.print("Text: "); 
+  display.println(textBuffer);
+  display.display();
+}
+
+void drawGenerator() {
+  if(!displayOK) return;
+  display.clearDisplay();
+  display.setCursor(0,0);
+  display.println("[ GENERATOR ]");
+  display.print("Delka: ");
+  display.println(passLen);
+  display.println("Heslo:");
+  display.println(currentPass);
+  display.setCursor(0, 56);
+  display.println("B1:len+ B2:len- B3:Gen");
+  display.display();
 }
