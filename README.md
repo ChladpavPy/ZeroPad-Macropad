@@ -32,7 +32,7 @@ I designed a custom PCB in KiCad featuring a 2x3 matrix with 6 mechanical Cherry
 ### PCB Routing & Schematic
 ![PCB Front](Images/pcb_new.png)
 ![PCB Back](Images/pcb_new2.png)
-![Schematic](Images/schematics1.png)
+![Schematic](Images/schematics2.png)
 
 ---
 
